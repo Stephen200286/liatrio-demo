@@ -10,11 +10,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t go-app:1.0.${{ github.run_number }} .
+        run: docker build -t ${{ vars.DOCKERHUB_USERNAME }}/go-app:1.0.${{ github.run_number }} .
   
       - name: Start container in background
         run: |
-          docker run -d -p 80:80 go-app:1.0.${{ github.run_number }}
+          docker run -d -p 80:80 ${{ vars.DOCKERHUB_USERNAME }}/go-app:1.0.${{ github.run_number }}
           sleep 5 # wait for the app to start
 
       - name: Run Tests
