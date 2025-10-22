@@ -22,7 +22,7 @@ func main() {
     app := fiber.New()
     app.Get("/", func(c *fiber.Ctx) error {
         // Convert the struct to a json object
-        return c.JSON(newJsonTest("My name is Stephen"))
+        return c.JSON(newJsonTest("My name is Linus"))
     })
 
     app.Listen(":80")

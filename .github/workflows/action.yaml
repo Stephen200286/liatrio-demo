@@ -39,3 +39,22 @@ jobs:
 
       - name: Push image to Docker Hub
         run: docker push ${{ vars.DOCKERHUB_USERNAME }}/go-app:1.0.${{ github.run_number }}
+
+
+      - name: GCP auth
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: liatrio-demo-475423
+          workload_identity_provider: projects/892806361271/locations/global/workloadIdentityPools/github/providers/liatrio-demo
+
+      - name: Set up GCP SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure kubectl
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: hello-cluster
+          location: us-central1
+
+      - name: Deploy
+        run: kubectl set image deployment/hello-server go-app=${{ vars.DOCKERHUB_USERNAME }}/go-app:1.0.${{ github.run_number }}
