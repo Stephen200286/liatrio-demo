@@ -7,8 +7,14 @@ on:
 jobs:
   build-test-push:
     runs-on: ubuntu-latest
+    
+    # Needed for automated deployments
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
+      # Build
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -19,15 +25,32 @@ jobs:
         run: |
           docker run -d -p 80:80 ${{ vars.DOCKERHUB_USERNAME }}/go-app:1.0.${{ github.run_number }}
           sleep 5 # wait for the app to start
-
+      
+      # Test
       - name: Run Tests
         uses: liatrio/github-actions/apprentice-action@0b41561cca6822cc8d880fe0e49e7807a41fdf91
 
+      # Push
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Push image to Docker Hub
         run: docker push ${{ vars.DOCKERHUB_USERNAME }}/go-app:1.0.${{ github.run_number }}
+      
+      # Deploy
+      - name: GCP auth
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: liatrio-demo-475423
+          workload_identity_provider: projects/892806361271/locations/global/workloadIdentityPools/github/providers/liatrio-interview-exercise
+      - name: Set up GCP SDK
+        uses: google-github-actions/setup-gcloud@v3
+      - name: Configure kubectl
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: hello-cluster
+          location: us-central1
+      - name: Deploy
+        run: kubectl set image deployment/hello-server go-app=${{ vars.DOCKERHUB_USERNAME }}/go-app:1.0.${{ github.run_number }}
